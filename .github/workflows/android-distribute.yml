@@ -1,3 +1,4 @@
+
 name: Android — Firebase App Distribution
 
 on:
@@ -29,20 +30,35 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x gradlew
 
-      - name: Set version code
-        run: sed -i "s/versionCode = 1/versionCode = ${{ github.run_number }}/" androidApp/build.gradle.kts
-
       - name: Build debug APK
         run: ./gradlew :androidApp:assembleDebug
 
       - name: Install Firebase CLI
-        run: npm install -g firebase-tools
+        run: npm install -g firebase-tools@14
+
+      # Auth via a Google service account, replacing the deprecated
+      # --token / FIREBASE_TOKEN flow. Store the raw service-account JSON
+      # (exactly as downloaded, no encoding) in the FIREBASE_SERVICE_ACCOUNT_JSON secret.
+      # This action writes the key to a temp file and exports
+      # GOOGLE_APPLICATION_CREDENTIALS for the steps that follow.
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
 
       - name: Upload to Firebase App Distribution
+        env:
+          FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
         run: |
-          firebase appdistribution:distribute \
-            androidApp/build/outputs/apk/debug/androidApp-debug.apk \
-            --app ${{ secrets.FIREBASE_APP_ID }} \
+          # Resolve the APK by glob so a different archive base name won't break the run.
+          APK=$(ls androidApp/build/outputs/apk/debug/*.apk | head -n1)
+          if [ -z "$APK" ]; then
+            echo "::error::No APK found under androidApp/build/outputs/apk/debug/"
+            exit 1
+          fi
+          echo "Distributing $APK"
+          
+          firebase appdistribution:distribute "$APK" \
+            --app "$FIREBASE_APP_ID" \
             --groups testers \
-            --release-notes "Build #${{ github.run_number }}" \
-            --token ${{ secrets.FIREBASE_TOKEN }}
+            --release-notes "Build #${{ github.run_number }}"
