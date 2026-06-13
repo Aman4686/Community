@@ -10,4 +10,7 @@ sealed class Screen : NavKey {
 
     @Serializable
     data object Communities : Screen()
+
+    @Serializable
+    data object Profile : Screen()
 }

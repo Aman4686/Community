@@ -28,6 +28,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,10 +47,17 @@ import community.shared.generated.resources.ic_chevron_up
 import community.shared.generated.resources.ic_lock
 import community.shared.generated.resources.ic_megaphone
 import community.shared.generated.resources.ic_person
+import com.example.community.navigation.LocalDrawerState
+import com.example.community.navigation.LocalNavBackStack
+import com.example.community.navigation.Screen
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
 fun CommunityDrawerSheet() {
+    val backStack = LocalNavBackStack.current
+    val drawerState = LocalDrawerState.current
+    val scope = rememberCoroutineScope()
     var adminExpanded by remember { mutableStateOf(true) }
 
     ModalDrawerSheet(
@@ -208,7 +216,8 @@ fun CommunityDrawerSheet() {
                 Row(
                     modifier = Modifier
                         .padding(start = 6.dp)
-                        .alpha(0.55f),
+                        .alpha(0.55f)
+                        .clickable { scope.launch { drawerState.close() }; backStack.add(Screen.Profile) },
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {

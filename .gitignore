@@ -17,3 +17,12 @@ captures
 !*.xcworkspace/contents.xcworkspacedata
 **/xcshareddata/WorkspaceSettings.xcsettings
 node_modules/
+
+# Firebase config (contains API keys — add to source control only if repo is private)
+google-services.json
+GoogleService-Info.plist
+
+# Android signing
+*.keystore
+*.jks
+keystore.properties
